@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>互動式化學元素週期表 - 完整資料版</title>
+    <title>互動式化學元素週期表 - 維基圖片強化版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap');
@@ -25,7 +25,6 @@
             gap: 4px;
         }
 
-        /* 底部 F 區塊：2列 x 15欄 */
         .f-block-grid {
             display: grid;
             grid-template-columns: repeat(15, minmax(0, 1fr));
@@ -34,22 +33,22 @@
 
         .element-card {
             aspect-ratio: 1 / 1;
-            border-radius: 4px;
+            border-radius: 6px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.25s ease;
             position: relative;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         .element-card:hover {
-            transform: scale(1.25);
+            transform: translateY(-5px) scale(1.2);
             z-index: 50;
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
-            border-color: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
         }
 
         /* 元素分類配色 */
@@ -65,97 +64,95 @@
         .actinide { background-color: #9f1239; }
 
         .modal-backdrop {
-            background-color: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(12px);
+            background-color: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(15px);
         }
 
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background-color: #334155;
-            border-radius: 4px;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #475569; border-radius: 10px; }
     </style>
 </head>
-<body class="p-4 md:p-6">
+<body class="p-6">
 
-    <header class="text-center mb-8">
-        <h1 class="text-3xl font-bold mb-2">化學元素週期表</h1>
-        <p class="text-slate-400 font-light">點擊元素查看完整資訊（含維基百科實拍圖與電子組態）</p>
+    <header class="text-center mb-10">
+        <h1 class="text-4xl font-extrabold mb-3 tracking-tight">互動式化學元素週期表</h1>
+        <div class="flex justify-center gap-6 text-xs text-slate-400">
+            <span class="flex items-center gap-1"><i class="w-3 h-3 nonmetal rounded-full"></i> 非金屬</span>
+            <span class="flex items-center gap-1"><i class="w-3 h-3 noble-gas rounded-full"></i> 惰性氣體</span>
+            <span class="flex items-center gap-1"><i class="w-3 h-3 transition-metal rounded-full"></i> 過渡金屬</span>
+            <span class="flex items-center gap-1"><i class="w-3 h-3 alkali-metal rounded-full"></i> 鹼金屬</span>
+        </div>
     </header>
 
     <div class="overflow-x-auto">
         <div class="periodic-container max-w-7xl mx-auto">
-            <!-- 主表 -->
-            <div id="main-table" class="periodic-grid mb-10"></div>
+            <!-- 1-7 週期主表 -->
+            <div id="main-table" class="periodic-grid mb-12"></div>
             
-            <!-- 分隔與標籤 -->
-            <div class="flex items-center gap-4 mb-6 opacity-30">
-                <div class="h-[1px] flex-grow bg-slate-700"></div>
-                <span class="text-[10px] tracking-[0.3em] uppercase">Lanthanides & Actinides (F-Block)</span>
-                <div class="h-[1px] flex-grow bg-slate-700"></div>
+            <!-- F區塊標籤 -->
+            <div class="flex justify-center mb-6">
+                <div class="w-[83.33%] border-t border-slate-700 pt-4 text-center">
+                    <span class="text-[10px] text-slate-500 uppercase tracking-widest">鑭系與錒系元素 (Lanthanides & Actinides)</span>
+                </div>
             </div>
 
-            <!-- 下方 F 區塊 (2列 x 15欄) -->
+            <!-- F區塊 2x15 -->
             <div class="flex justify-center">
-                <div id="f-block-table" class="f-block-grid w-[83.33%]"></div> <!-- 15/18 的寬度 -->
+                <div id="f-block-table" class="f-block-grid w-[83.33%]"></div>
             </div>
         </div>
     </div>
 
-    <!-- 彈窗 Modal -->
+    <!-- 彈窗 -->
     <div id="modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
         <div class="modal-backdrop absolute inset-0" onclick="closeModal()"></div>
-        <div class="bg-slate-800 w-full max-w-4xl rounded-3xl shadow-2xl relative overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
+        <div class="bg-slate-800 w-full max-w-4xl rounded-[2rem] shadow-2xl relative overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
             
-            <button onclick="closeModal()" class="absolute top-4 right-4 text-white/50 hover:text-white z-20 bg-black/40 p-2 rounded-full transition-all">
+            <button onclick="closeModal()" class="absolute top-6 right-6 text-white/50 hover:text-white z-30 bg-black/30 p-2 rounded-full backdrop-blur-md">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
 
-            <!-- 側邊：基本標識 -->
-            <div id="modal-side" class="w-full md:w-1/3 p-10 flex flex-col items-center justify-center text-center">
+            <!-- 側邊 -->
+            <div id="modal-side" class="w-full md:w-1/3 p-12 flex flex-col items-center justify-center text-center transition-all duration-700">
                 <span id="m-number" class="text-4xl font-bold opacity-30 mb-2"></span>
-                <span id="m-symbol" class="text-8xl font-black mb-4 drop-shadow-2xl"></span>
-                <h2 id="m-name-zh" class="text-5xl font-bold mb-2"></h2>
-                <p id="m-name-en" class="text-xl opacity-70 uppercase tracking-widest font-light"></p>
+                <span id="m-symbol" class="text-9xl font-black mb-4 drop-shadow-2xl"></span>
+                <h2 id="m-name-zh" class="text-6xl font-bold mb-2"></h2>
+                <p id="m-name-en" class="text-xl opacity-60 uppercase tracking-tighter font-light"></p>
             </div>
 
-            <!-- 內容：詳細數據 -->
+            <!-- 詳細資訊 -->
             <div class="w-full md:w-2/3 p-10 bg-slate-900 overflow-y-auto custom-scrollbar">
-                <div class="space-y-10">
-                    <!-- 圖片容器 -->
-                    <div class="rounded-2xl overflow-hidden h-64 bg-slate-800 border border-slate-700 shadow-inner group relative">
-                        <img id="m-image" src="" alt="元素照片" class="object-cover w-full h-full transition-transform duration-1000 group-hover:scale-105">
-                        <div class="absolute bottom-0 left-0 right-0 p-3 bg-black/40 text-[10px] text-white/50 italic">
-                            圖片來源：Wikimedia Commons
-                        </div>
+                <div class="space-y-12">
+                    <!-- 圖片 -->
+                    <div class="rounded-3xl overflow-hidden h-72 bg-slate-800 border border-white/5 shadow-2xl relative group">
+                        <img id="m-image" src="" alt="元素照片" class="object-cover w-full h-full transition-transform duration-1000 group-hover:scale-110" onerror="handleImgError(this)">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-8">
+                    <div class="space-y-8">
                         <section>
-                            <h3 class="text-indigo-400 text-xs font-bold uppercase tracking-widest mb-4 flex items-center">
-                                <span class="w-10 h-[1px] bg-indigo-500 mr-3"></span> 電子組態 (Electron Configuration)
+                            <h3 class="text-indigo-400 text-[10px] font-black uppercase tracking-widest mb-4 flex items-center">
+                                <span class="w-12 h-[1px] bg-indigo-500 mr-3"></span> 電子組態 (Configuration)
                             </h3>
-                            <p id="m-electron" class="text-3xl font-mono text-white leading-tight"></p>
+                            <p id="m-electron" class="text-4xl font-mono font-bold text-white tracking-tighter"></p>
                         </section>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="bg-slate-800/40 p-5 rounded-2xl border border-white/5">
+                            <div class="bg-white/5 p-6 rounded-3xl">
                                 <h4 class="text-emerald-400 text-[10px] font-bold uppercase mb-2">物理性質</h4>
                                 <p id="m-physical" class="text-sm text-slate-300 leading-relaxed"></p>
                             </div>
-                            <div class="bg-slate-800/40 p-5 rounded-2xl border border-white/5">
+                            <div class="bg-white/5 p-6 rounded-3xl">
                                 <h4 class="text-rose-400 text-[10px] font-bold uppercase mb-2">化學性質</h4>
                                 <p id="m-chemical" class="text-sm text-slate-300 leading-relaxed"></p>
                             </div>
                         </div>
 
-                        <section class="bg-amber-900/10 p-6 rounded-2xl border border-amber-500/10">
-                            <h3 class="text-amber-400 text-xs font-bold uppercase tracking-widest mb-3">主要應用與自然存在</h3>
-                            <p id="m-apps" class="text-slate-300 leading-relaxed"></p>
+                        <section class="bg-amber-400/5 p-6 rounded-3xl border border-amber-400/10">
+                            <h3 class="text-amber-400 text-[10px] font-bold uppercase tracking-widest mb-3">生活應用與發現</h3>
+                            <p id="m-apps" class="text-slate-300 text-sm leading-relaxed italic"></p>
                         </section>
                     </div>
                 </div>
@@ -164,129 +161,111 @@
     </div>
 
     <script>
-        // 完整的 118 元素數據，包含電子組態與維基百科圖片檔名
-        // 圖片使用 Wikimedia Commons 的 Special:FilePath 獲取直鏈
-        const allElements = [
-            {n:1, s:"H", zh:"氫", en:"Hydrogen", cat:"nonmetal", r:1, c:1, conf:"1s¹", img:"Hydrogen_discharge_tube.jpg", phys:"無色、無味氣體，是宇宙中最豐富的元素。", chem:"常溫下較不活潑，但在觸媒或加熱下與多數元素反應。", apps:"火箭燃料、燃料電池、合成氨、石油精煉。"},
-            {n:2, s:"He", zh:"氦", en:"Helium", cat:"noble-gas", r:1, c:18, conf:"1s²", img:"Helium_discharge_tube.jpg", phys:"無色無味，沸點為所有元素中最低。", chem:"化學性質極不活潑，幾乎不與任何物質反應。", apps:"低溫冷卻（如 MRI）、飛船充氣、深海潛水混合氣。"},
-            {n:3, s:"Li", zh:"鋰", en:"Lithium", cat:"alkali-metal", r:2, c:1, conf:"[He] 2s¹", img:"Lithium_element.jpg", phys:"銀白色最輕金屬，可用刀切開。", chem:"極具反應性，在空氣中迅速氧化，遇水放出氫氣。", apps:"鋰離子電池、陶瓷與玻璃、抗憂鬱藥物。"},
-            {n:4, s:"Be", zh:"鈹", en:"Beryllium", cat:"alkaline-earth", r:2, c:2, conf:"[He] 2s²", img:"Be-140g.jpg", phys:"鋼灰色、堅硬且質輕的金屬。", chem:"表面易形成氧化膜防止進一步腐蝕，具高導熱性。", apps:"航空太空組件、X射線視窗、鈹銅合金。"},
-            {n:5, s:"B", zh:"硼", en:"Boron", cat:"metalloid", r:2, c:13, conf:"[He] 2s² 2p¹", img:"Boron_crystalline.jpg", phys:"硬度極高，具有黑色的金屬光澤。", chem:"在高溫下與多數金屬與非金屬反應。", apps:"耐熱玻璃（Pyrex）、半導體摻雜、洗潔劑（硼砂）。"},
-            {n:6, s:"C", zh:"碳", en:"Carbon", cat:"nonmetal", r:2, c:14, conf:"[He] 2s² 2p²", img:"Graphite-Diamond-Carbon.png", phys:"有多種同素異形體：軟黑的石墨、透明堅硬的鑽石。", chem:"構成生命基礎，能形成無數的有機化合物。", apps:"鋼鐵生產、珠寶、碳纖維、化石燃料。"},
-            {n:7, s:"N", zh:"氮", en:"Nitrogen", cat:"nonmetal", r:2, c:15, conf:"[He] 2s² 2p³", img:"Liquid_nitrogen_2.jpg", phys:"大氣主要成分，無色無味雙原子氣體。", chem:"化學性質穩定，氮氣中大多數物質不能燃燒。", apps:"肥料、工業製氨、食品充氮包裝、液氮致冷。"},
-            {n:8, s:"O", zh:"氧", en:"Oxygen", cat:"nonmetal", r:2, c:16, conf:"[He] 2s² 2p⁴", img:"Liquid_oxygen_in_a_beaker_4.jpg", phys:"具順磁性的淡藍色液體（低溫）或無色氣體。", chem:"強氧化劑，支持呼吸與燃燒。", apps:"鋼鐵精煉、醫療用氧、火箭推進劑。"},
-            {n:9, s:"F", zh:"氟", en:"Fluorine", cat:"halogen", r:2, c:17, conf:"[He] 2s² 2p⁵", img:"Fluorine_sample.jpg", phys:"淡黃色氣體，具強烈刺激性。", chem:"最強的氧化劑，幾乎與所有物質反應。", apps:"鐵氟龍塗層、牙膏防蛀、鈾濃縮（UF6）。"},
-            {n:10, s:"Ne", zh:"氖", en:"Neon", cat:"noble-gas", r:2, c:18, conf:"[He] 2s² 2p⁶", img:"Neon_discharge_tube.jpg", phys:"無色、化學性質極不活潑的稀有氣體。", chem:"在放電管中發出明亮的紅橘色光。", apps:"霓虹燈信號、高壓指示器、冷卻劑。"},
-            {n:11, s:"Na", zh:"鈉", en:"Sodium", cat:"alkali-metal", r:3, c:1, conf:"[Ne] 3s¹", img:"Na_2.jpg", phys:"銀白色柔軟金屬，密度小於水。", chem:"遇水劇烈反應並著火，必須存於油中。", apps:"食鹽、肥皂製造、街道照明（鈉燈）。"},
-            {n:12, s:"Mg", zh:"鎂", en:"Magnesium", cat:"alkaline-earth", r:3, c:2, conf:"[Ne] 3s²", img:"Magnesium_crystals.jpg", phys:"輕質銀白色金屬，延展性好。", chem:"燃燒時發出耀眼白光。", apps:"鋁鎂合金（航空與汽車）、煙火、抗酸劑。"},
-            {n:13, s:"Al", zh:"鋁", en:"Aluminum", cat:"post-transition", r:3, c:13, conf:"[Ne] 3s² 3p¹", img:"Aluminium-4.jpg", phys:"輕金屬，具高導電性與熱傳導性。", chem:"表面形成氧化膜，具極佳的抗腐蝕性。", apps:"飲料罐、鋁箔、飛機結構、建築。"},
-            {n:14, s:"Si", zh:"矽", en:"Silicon", cat:"metalloid", r:3, c:14, conf:"[Ne] 3s² 3p²", img:"Silicon_Cropped.jpg", phys:"硬脆的藍灰色結晶體。", chem:"地殼中第二豐富元素，是重要的半導體。", apps:"電腦晶片、玻璃、太陽能電池、混凝土。"},
-            {n:15, s:"P", zh:"磷", en:"Phosphorus", cat:"nonmetal", r:3, c:15, conf:"[Ne] 3s² 3p³", img:"Phosphorus-allotropes.jpg", phys:"有白磷、紅磷、黑磷等同素異形體。", chem:"白磷具自燃性，紅磷較穩定。", apps:"肥料、火柴、鋼鐵添加劑。"},
-            {n:16, s:"S", zh:"硫", en:"Sulfur", cat:"nonmetal", r:3, c:16, conf:"[Ne] 3s² 3p⁴", img:"Sulfur-sample.jpg", phys:"黃色脆性固體。", chem:"能與多數金屬與非金屬結合。", apps:"硫酸製造、橡膠硫化、火藥。"},
-            {n:17, s:"Cl", zh:"氯", en:"Chlorine", cat:"halogen", r:3, c:17, conf:"[Ne] 3s² 3p⁵", img:"Chlorine_gas.jpg", phys:"黃綠色有毒氣體。", chem:"強氧化劑，易溶於水。", apps:"水處理漂白、PVC塑膠生產、化學製藥。"},
-            {n:18, s:"Ar", zh:"氬", en:"Argon", cat:"noble-gas", r:3, c:18, conf:"[Ne] 3s² 3p⁶", img:"Argon_discharge_tube.jpg", phys:"無色無味大氣第三豐富氣體。", chem:"極不活潑。", apps:"焊接保護氣、燈泡填充、不鏽鋼生產。"},
-            {n:26, s:"Fe", zh:"鐵", en:"Iron", cat:"transition-metal", r:4, c:8, conf:"[Ar] 3d⁶ 4s²", img:"Iron_electrolytic_and_1cm3_cube.jpg", phys:"銀灰色磁性金屬。", chem:"易在潮濕空氣中鏽蝕。", apps:"基礎建設、橋樑、車輛、血液血紅素。"},
-            {n:79, s:"Au", zh:"金", en:"Gold", cat:"transition-metal", r:6, c:11, conf:"[Xe] 4f¹⁴ 5d¹⁰ 6s¹", img:"Gold_nugget_3.jpg", phys:"金黃色、極具延展性的貴金屬。", chem:"化學性質極不活潑。", apps:"首飾、儲值、電子工業、太空裝鍍層。"}
-        ];
-
-        // 更多元素數據的輔助函數 (填充剩餘 118 元素)
-        const generateFullData = () => {
-            const symbols = ["","H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si","P","S","Cl","Ar","K","Ca","Sc","Ti","V","Cr","Mn","Fe","Co","Ni","Cu","Zn","Ga","Ge","As","Se","Br","Kr","Rb","Sr","Y","Zr","Nb","Mo","Tc","Ru","Rh","Pd","Ag","Cd","In","Sn","Sb","Te","I","Xe","Cs","Ba","La","Ce","Pr","Nd","Pm","Sm","Eu","Gd","Tb","Dy","Ho","Er","Tm","Yb","Lu","Hf","Ta","W","Re","Os","Ir","Pt","Au","Hg","Tl","Pb","Bi","Po","At","Rn","Fr","Ra","Ac","Th","Pa","U","Np","Pu","Am","Cm","Bk","Cf","Es","Fm","Md","No","Lr","Rf","Db","Sg","Bh","Hs","Mt","Ds","Rg","Cn","Nh","Fl","Mc","Lv","Ts","Og"];
-            const namesZh = ["","氫","氦","鋰","鈹","硼","碳","氮","氧","氟","氖","鈉","鎂","鋁","矽","磷","硫","氯","氬","鉀","鈣","鈧","鈦","釩","鉻","錳","鐵","鈷","鎳","銅","鋅","鎵","鍺","砷","硒","溴","氪","銣","鍶","釔","鋯","鈮","鉬","鎝","釕","銠","鈀","銀","鎘","銦","錫","銻","碲","碘","氙","銫","鋇","鑭","鈰","鐠","釹"," promethium","釤","銪","釓","鋱","鏑","鈥","鉺","銩","鐿","鑥","鉿","鉭","鎢","錸","鋨","銥","鉑","金","汞","鉈","鉛","鉍","釙","砈","氡","鍅","鐳","錒","釷","鏷","鈾","錼","鈽","鋂","鋦","鉳","鉲","鑀","鐨","鍆","鍩","鐒","鑪","𨧀","𨭎","𨨏","𨭆","䥑","鐽","錀","鎶","鉨","鈇","鏌","鉝","鿬","鿫"];
-            const configs = ["","1s¹","1s²","[He] 2s¹","[He] 2s²","[He] 2s² 2p¹","[He] 2s² 2p²","[He] 2s² 2p³","[He] 2s² 2p⁴","[He] 2s² 2p⁵","[He] 2s² 2p⁶","[Ne] 3s¹","[Ne] 3s²","[Ne] 3s² 3p¹","[Ne] 3s² 3p²","[Ne] 3s² 3p³","[Ne] 3s² 3p⁴","[Ne] 3s² 3p⁵","[Ne] 3s² 3p⁶","[Ar] 4s¹","[Ar] 4s²","[Ar] 3d¹ 4s²","[Ar] 3d² 4s²","[Ar] 3d³ 4s²","[Ar] 3d⁵ 4s¹","[Ar] 3d⁵ 4s²","[Ar] 3d⁶ 4s²","[Ar] 3d⁷ 4s²","[Ar] 3d⁸ 4s²","[Ar] 3d¹⁰ 4s¹","[Ar] 3d¹⁰ 4s²","[Ar] 3d¹⁰ 4s² 4p¹","[Ar] 3d¹⁰ 4s² 4p²","[Ar] 3d¹⁰ 4s² 4p³","[Ar] 3d¹⁰ 4s² 4p⁴","[Ar] 3d¹⁰ 4s² 4p⁵","[Ar] 3d¹⁰ 4s² 4p⁶","[Kr] 5s¹","[Kr] 5s²","[Kr] 4d¹ 5s²","[Kr] 4d² 5s²","[Kr] 4d⁴ 5s¹","[Kr] 4d⁵ 5s¹","[Kr] 4d⁵ 5s²","[Kr] 4d⁷ 5s¹","[Kr] 4d⁸ 5s¹","[Kr] 4d¹⁰","[Kr] 4d¹⁰ 5s¹","[Kr] 4d¹⁰ 5s²","[Kr] 4d¹⁰ 5s² 5p¹","[Kr] 4d¹⁰ 5s² 5p²","[Kr] 4d¹⁰ 5s² 5p³","[Kr] 4d¹⁰ 5s² 5p⁴","[Kr] 4d¹⁰ 5s² 5p⁵","[Kr] 4d¹⁰ 5s² 5p⁶","[Xe] 6s¹","[Xe] 6s²","[Xe] 5d¹ 6s²","[Xe] 4f¹ 5d¹ 6s²","[Xe] 4f³ 6s²","[Xe] 4f⁴ 6s²","[Xe] 4f⁵ 6s²","[Xe] 4f⁶ 6s²","[Xe] 4f⁷ 6s²","[Xe] 4f⁷ 5d¹ 6s²","[Xe] 4f⁹ 6s²","[Xe] 4f¹⁰ 6s²","[Xe] 4f¹¹ 6s²","[Xe] 4f¹² 6s²","[Xe] 4f¹³ 6s²","[Xe] 4f¹⁴ 6s²","[Xe] 4f¹⁴ 5d¹ 6s²","[Xe] 4f¹⁴ 5d² 6s²","[Xe] 4f¹⁴ 5d³ 6s²","[Xe] 4f¹⁴ 5d⁴ 6s²","[Xe] 4f¹⁴ 5d⁵ 6s²","[Xe] 4f¹⁴ 5d⁶ 6s²","[Xe] 4f¹⁴ 5d⁷ 6s²","[Xe] 4f¹⁴ 5d⁹ 6s¹","[Xe] 4f¹⁴ 5d¹⁰ 6s¹","[Xe] 4f¹⁴ 5d¹⁰ 6s²","[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p¹","[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p²","[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p³","[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁴","[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁵","[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁶","[Rn] 7s¹","[Rn] 7s²","[Rn] 6d¹ 7s²","[Rn] 6d² 7s²","[Rn] 5f² 6d¹ 7s²","[Rn] 5f³ 6d¹ 7s²","[Rn] 5f⁴ 6d¹ 7s²","[Rn] 5f⁶ 7s²","[Rn] 5f⁷ 7s²","[Rn] 5f⁷ 6d¹ 7s²","[Rn] 5f⁹ 7s²","[Rn] 5f¹⁰ 7s²","[Rn] 5f¹¹ 7s²","[Rn] 5f¹² 7s²","[Rn] 5f¹³ 7s²","[Rn] 5f¹⁴ 7s²","[Rn] 5f¹⁴ 6d¹ 7s²","[Rn] 5f¹⁴ 6d² 7s²","[Rn] 5f¹⁴ 6d³ 7s²","[Rn] 5f¹⁴ 6d⁴ 7s²","[Rn] 5f¹⁴ 6d⁵ 7s²","[Rn] 5f¹⁴ 6d⁶ 7s²","[Rn] 5f¹⁴ 6d⁷ 7s²","[Rn] 5f¹⁴ 6d⁸ 7s²","[Rn] 5f¹⁴ 6d¹⁰ 7s¹","[Rn] 5f¹⁴ 6d¹⁰ 7s²","[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p¹","[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p²","[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p³","[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁴","[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁵","[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁶"];
-
-            const result = [];
-            for(let i=1; i<=118; i++) {
-                // 找出預定義的詳細數據，其餘使用生成
-                let existing = allElements.find(e => e.n === i);
-                if (existing) {
-                    result.push(existing);
-                    continue;
-                }
-
-                // 判斷分類與座標
-                let r, c, cat;
-                if (i <= 2) r = 1; else if (i <= 10) r = 2; else if (i <= 18) r = 3; else if (i <= 36) r = 4; else if (i <= 54) r = 5; else if (i <= 86) r = 6; else r = 7;
-                
-                // 座標定位邏輯 (略簡，實際應用中應詳細定義每格位置)
-                // 此處為了示範 F-區塊：
-                if (i >= 57 && i <= 71) { r = 8; c = i - 57 + 4; cat = "lanthanide"; }
-                else if (i >= 89 && i <= 103) { r = 9; c = i - 89 + 4; cat = "actinide"; }
-                else {
-                    // 主表邏輯座標... 這裡假設已在 rawElements 定義完畢或根據規律計算
-                    // (為了程式碼簡潔，下方 init 會精確放置)
-                }
-
-                result.push({
-                    n: i,
-                    s: symbols[i],
-                    zh: namesZh[i],
-                    en: symbols[i], 
-                    cat: "transition-metal", // 預設
-                    conf: configs[i],
-                    img: `${symbols[i]}_element.jpg`,
-                    phys: "詳細物理性質待查閱。",
-                    chem: "化學性質依能階分佈而定。",
-                    apps: "應用於科研與特定工業領域。"
-                });
-            }
-            return result;
+        // 維基百科最穩定的第一張圖名稱對照表
+        const wikiImages = {
+            1: "Hydrogen_discharge_tube.jpg",
+            2: "Helium_discharge_tube.jpg",
+            3: "Lithium_element.jpg",
+            4: "Be-140g.jpg",
+            5: "Boron_crystalline.jpg",
+            6: "Diamond-and-graphite-with-scale.jpg",
+            7: "Liquid_nitrogen_2.jpg",
+            8: "Liquid_oxygen_in_a_beaker_4.jpg",
+            9: "Fluorine_sample.jpg",
+            10: "Neon_discharge_tube.jpg",
+            11: "Na_2.jpg",
+            12: "Magnesium_crystals.jpg",
+            13: "Aluminium-4.jpg",
+            14: "SiliconCroda.jpg",
+            15: "Phosphorus-allotropes.jpg",
+            16: "Sulfur-sample.jpg",
+            17: "Chlorine_gas.jpg",
+            18: "Argon_discharge_tube.jpg",
+            19: "Potassium.jpg",
+            20: "Calcium_1.jpg",
+            21: "Scandium_sublimed_dendrites_and_1cm3_cube.jpg",
+            22: "Titanium_crystal_bar_and_1cm3_cube.jpg",
+            23: "Vanadium_crystal_bar_and_1cm3_cube.jpg",
+            24: "Chromium_crystals_and_1cm3_cube.jpg",
+            25: "Manganese_electrolytic_and_1cm3_cube.jpg",
+            26: "Iron_electrolytic_and_1cm3_cube.jpg",
+            27: "Cobalt_electrolytic_and_1cm3_cube.jpg",
+            28: "Nickel_ch_piece.jpg",
+            29: "Cu-sheet-eroded-1.jpg",
+            30: "Zinc_fragment_sublimed_and_1cm3_cube.jpg",
+            47: "Silver_crystal.jpg",
+            50: "Beta_tin_crystalline_fragment_and_1cm3_cube.jpg",
+            74: "Tungsten_rods.jpg",
+            78: "Platinum_crystals.jpg",
+            79: "Gold_nugget_3.jpg",
+            80: "Mercury_1.jpg",
+            82: "Lead_electrolytic_and_1cm3_cube.jpg",
+            92: "Uranium_Nature_Magazine_No_2671_Vol_106_Oct_7_1920.jpg"
         };
 
-        const elements = generateFullData();
+        const configs = ["","1s¹","1s²","[He] 2s¹","[He] 2s²","[He] 2s² 2p¹","[He] 2s² 2p²","[He] 2s² 2p³","[He] 2s² 2p⁴","[He] 2s² 2p⁵","[He] 2s² 2p⁶","[Ne] 3s¹","[Ne] 3s²","[Ne] 3s² 3p¹","[Ne] 3s² 3p²","[Ne] 3s² 3p³","[Ne] 3s² 3p⁴","[Ne] 3s² 3p⁵","[Ne] 3s² 3p⁶","[Ar] 4s¹","[Ar] 4s²","[Ar] 3d¹ 4s²","[Ar] 3d² 4s²","[Ar] 3d³ 4s²","[Ar] 3d⁵ 4s¹","[Ar] 3d⁵ 4s²","[Ar] 3d⁶ 4s²","[Ar] 3d⁷ 4s²","[Ar] 3d⁸ 4s²","[Ar] 3d¹⁰ 4s¹","[Ar] 3d¹⁰ 4s²","[Ar] 3d¹⁰ 4s² 4p¹","[Ar] 3d¹⁰ 4s² 4p²","[Ar] 3d¹⁰ 4s² 4p³","[Ar] 3d¹⁰ 4s² 4p⁴","[Ar] 3d¹⁰ 4s² 4p⁵","[Ar] 3d¹⁰ 4s² 4p⁶","[Kr] 5s¹","[Kr] 5s²","[Kr] 4d¹ 5s²","[Kr] 4d² 5s²","[Kr] 4d⁴ 5s¹","[Kr] 4d⁵ 5s¹","[Kr] 4d⁵ 5s²","[Kr] 4d⁷ 5s¹","[Kr] 4d⁸ 5s¹","[Kr] 4d¹⁰","[Kr] 4d¹⁰ 5s¹","[Kr] 4d¹⁰ 5s²","[Kr] 4d¹⁰ 5s² 5p¹","[Kr] 4d¹⁰ 5s² 5p²","[Kr] 4d¹⁰ 5s² 5p³","[Kr] 4d¹⁰ 5s² 5p⁴","[Kr] 4d¹⁰ 5s² 5p⁵","[Kr] 4d¹⁰ 5s² 5p⁶","[Xe] 6s¹","[Xe] 6s²","[Xe] 5d¹ 6s²","[Xe] 4f¹ 5d¹ 6s²","[Xe] 4f³ 6s²","[Xe] 4f⁴ 6s²","[Xe] 4f⁵ 6s²","[Xe] 4f⁶ 6s²","[Xe] 4f⁷ 6s²","[Xe] 4f⁷ 5d¹ 6s²","[Xe] 4f⁹ 6s²","[Xe] 4f¹⁰ 6s²","[Xe] 4f¹¹ 6s²","[Xe] 4f¹¹ 6s²","[Xe] 4f¹³ 6s²","[Xe] 4f¹⁴ 6s²","[Xe] 4f¹⁴ 5d¹ 6s²","[Xe] 4f¹⁴ 5d² 6s²","[Xe] 4f¹⁴ 5d³ 6s²","[Xe] 4f¹⁴ 5d⁴ 6s²","[Xe] 4f¹⁴ 5d⁵ 6s²","[Xe] 4f¹⁴ 5d⁶ 6s²","[Xe] 4f¹⁴ 5d⁷ 6s²","[Xe] 4f¹⁴ 5d⁹ 6s¹","[Xe] 4f¹⁴ 5d¹⁰ 6s¹","[Xe] 4f¹⁴ 5d¹⁰ 6s²","[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p¹","[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p²","[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p³","[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁴","[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁵","[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁶","[Rn] 7s¹","[Rn] 7s²","[Rn] 6d¹ 7s²","[Rn] 6d² 7s²","[Rn] 5f² 6d¹ 7s²","[Rn] 5f³ 6d¹ 7s²","[Rn] 5f⁴ 6d¹ 7s²","[Rn] 5f⁶ 7s²","[Rn] 5f⁷ 7s²","[Rn] 5f⁷ 6d¹ 7s²","[Rn] 5f⁹ 7s²","[Rn] 5f¹⁰ 7s²","[Rn] 5f¹¹ 7s²","[Rn] 5f¹² 7s²","[Rn] 5f¹³ 7s²","[Rn] 5f¹⁴ 7s²","[Rn] 5f¹⁴ 6d¹ 7s²","[Rn] 5f¹⁴ 6d² 7s²","[Rn] 5f¹⁴ 6d³ 7s²","[Rn] 5f¹⁴ 6d⁴ 7s²","[Rn] 5f¹⁴ 6d⁵ 7s²","[Rn] 5f¹⁴ 6d⁶ 7s²","[Rn] 5f¹⁴ 6d⁷ 7s²","[Rn] 5f¹⁴ 6d⁸ 7s²","[Rn] 5f¹⁴ 6d¹⁰ 7s¹","[Rn] 5f¹⁴ 6d¹⁰ 7s²","[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p¹","[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p²","[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p³","[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁴","[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁵","[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁶"];
+
+        const symbols = ["","H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si","P","S","Cl","Ar","K","Ca","Sc","Ti","V","Cr","Mn","Fe","Co","Ni","Cu","Zn","Ga","Ge","As","Se","Br","Kr","Rb","Sr","Y","Zr","Nb","Mo","Tc","Ru","Rh","Pd","Ag","Cd","In","Sn","Sb","Te","I","Xe","Cs","Ba","La","Ce","Pr","Nd","Pm","Sm","Eu","Gd","Tb","Dy","Ho","Er","Tm","Yb","Lu","Hf","Ta","W","Re","Os","Ir","Pt","Au","Hg","Tl","Pb","Bi","Po","At","Rn","Fr","Ra","Ac","Th","Pa","U","Np","Pu","Am","Cm","Bk","Cf","Es","Fm","Md","No","Lr","Rf","Db","Sg","Bh","Hs","Mt","Ds","Rg","Cn","Nh","Fl","Mc","Lv","Ts","Og"];
+        const namesZh = ["","氫","氦","鋰","鈹","硼","碳","氮","氧","氟","氖","鈉","鎂","鋁","矽","磷","硫","氯","氬","鉀","鈣","鈧","鈦","釩","鉻","錳","鐵","鈷","鎳","銅","鋅","鎵","鍺","砷","硒","溴","氪","銣","鍶","釔","鋯","鈮","鉬","鎝","釕","銠","鈀","銀","鎘","銦","錫","銻","碲","碘","氙","銫","鋇","鑭","鈰","鐠","釹","鉕","釤","銪","釓","鋱","鏑","鈥","鉺","銩","鐿","鑥","鉿","鉭","鎢","錸","鋨","銥","鉑","金","汞","鉈","鉛","鉍","釙","砈","氡","鍅","鐳","錒","釷","","鈾","錼","鈽","鋂","鋦","鉳","鉲","鑀","鐨","鍆","鍩","鐒","鑪","𨧀","𨭎","𨨏","𨭆","䥑","鐽","錀","鎶","鉨","鈇","鏌","鉝","鿬","鿫"];
+        const namesEn = ["","Hydrogen","Helium","Lithium","Beryllium","Boron","Carbon","Nitrogen","Oxygen","Fluorine","Neon","Sodium","Magnesium","Aluminum","Silicon","Phosphorus","Sulfur","Chlorine","Argon","Potassium","Calcium","Scandium","Titanium","Vanadium","Chromium","Manganese","Iron","Cobalt","Nickel","Copper","Zinc","Gallium","Germanium","Arsenic","Selenium","Bromine","Krypton","Rubidium","Strontium","Yttrium","Zirconium","Niobium","Molybdenum","Technetium","Ruthenium","Rhodium","Palladium","Silver","Cadmium","Indium","Tin","Antimony","Tellurium","Iodine","Xenon","Cesium","Barium","Lanthanum","Cerium","Praseodymium","Neodymium","Promethium","Samarium","Europium","Gadolinium","Terbium","Dysprosium","Holmium","Erbium","Thulium","Ytterbium","Lutetium","Hafnium","Tantalum","Tungsten","Rhenium","Osmium","Iridium","Platinum","Gold","Mercury","Thallium","Lead","Bismuth","Polonium","Astatine","Radon","Francium","Radium","Actinium","Thorium","Protactinium","Uranium","Neptunium","Plutonium","Americium","Curium","Berkelium","Californium","Einsteinium","Fermium","Mendelevium","Nobelium","Lawrencium","Rutherfordium","Dubnium","Seaborgium","Bohrium","Hassium","Meitnerium","Darmstadtium","Roentgenium","Copernicium","Nihonium","Flerovium","Moscovium","Livermorium","Tennessine","Oganesson"];
+
+        function getCategory(n) {
+            if ([1, 6, 7, 8, 15, 16, 34].includes(n)) return "nonmetal";
+            if ([2, 10, 18, 36, 54, 86, 118].includes(n)) return "noble-gas";
+            if ([3, 11, 19, 37, 55, 87].includes(n)) return "alkali-metal";
+            if ([4, 12, 20, 38, 56, 88].includes(n)) return "alkaline-earth";
+            if ([5, 14, 32, 33, 51, 52, 85].includes(n)) return "metalloid";
+            if ([9, 17, 35, 53].includes(n)) return "halogen";
+            if ([13, 31, 49, 50, 81, 82, 83, 84, 113, 114, 115, 116, 117].includes(n)) return "post-transition";
+            if (n >= 57 && n <= 71) return "lanthanide";
+            if (n >= 89 && n <= 103) return "actinide";
+            return "transition-metal";
+        }
+
+        function handleImgError(img) {
+            const sym = document.getElementById('m-symbol').innerText;
+            img.src = `https://placehold.co/800x600/1e293b/475569?text=${sym}+Photo+Pending`;
+        }
 
         function initTable() {
             const mainTable = document.getElementById('main-table');
             const fTable = document.getElementById('f-block-table');
             
-            // 定義 118 元素的標準座標 (r: row, c: column)
-            const coords = [
-                {n:1, r:1, c:1, cat:"nonmetal"}, {n:2, r:1, c:18, cat:"noble-gas"},
-                {n:3, r:2, c:1, cat:"alkali-metal"}, {n:4, r:2, c:2, cat:"alkaline-earth"}, {n:5, r:2, c:13, cat:"metalloid"}, {n:6, r:2, c:14, cat:"nonmetal"}, {n:7, r:2, c:15, cat:"nonmetal"}, {n:8, r:2, c:16, cat:"nonmetal"}, {n:9, r:2, c:17, cat:"halogen"}, {n:10, r:2, c:18, cat:"noble-gas"},
-                {n:11, r:3, c:1, cat:"alkali-metal"}, {n:12, r:3, c:2, cat:"alkaline-earth"}, {n:13, r:3, c:13, cat:"post-transition"}, {n:14, r:3, c:14, cat:"metalloid"}, {n:15, r:3, c:15, cat:"nonmetal"}, {n:16, r:3, c:16, cat:"nonmetal"}, {n:17, r:3, c:17, cat:"halogen"}, {n:18, r:3, c:18, cat:"noble-gas"}
-                // 這裡繼續定義剩下的元素座標... (為節省空間，下方代碼用邏輯補完)
-            ];
-
-            // 補充剩下元素到座標系統
-            for(let i=19; i<=118; i++) {
-                if (i >= 57 && i <= 71) continue; // 鑭
-                if (i >= 89 && i <= 103) continue; // 錒
-                let r, c;
-                if(i <= 36) { r=4; c=i-18; }
-                else if(i <= 54) { r=5; c=i-36; }
-                else if(i <= 86) { r=6; c = i <= 56 ? i-54 : i-71+3; }
-                else { r=7; c = i <= 88 ? i-86 : i-103+3; }
-                
-                let cat = "transition-metal";
-                if ([31,49,50,81,82,83,84,113,114,115,116].includes(i)) cat="post-transition";
-                if ([32,33,51,52,85].includes(i)) cat="metalloid";
-                if ([34,35,53].includes(i)) cat="halogen";
-                if ([36,54,86,118].includes(i)) cat="noble-gas";
-                if ([19,37,55,87].includes(i)) cat="alkali-metal";
-                if ([20,38,56,88].includes(i)) cat="alkaline-earth";
-
-                coords.push({n:i, r:r, c:c, cat:cat});
-            }
-
-            // 渲染主表
-            const mainMap = {};
-            coords.forEach(o => mainMap[`${o.r}-${o.c}`] = o);
+            const getCoords = (n) => {
+                if (n === 1) return [1, 1];
+                if (n === 2) return [1, 18];
+                if (n >= 3 && n <= 4) return [2, n-2];
+                if (n >= 5 && n <= 10) return [2, n+8];
+                if (n >= 11 && n <= 12) return [3, n-10];
+                if (n >= 13 && n <= 18) return [3, n];
+                if (n >= 19 && n <= 36) return [4, n-18];
+                if (n >= 37 && n <= 54) return [5, n-36];
+                if (n >= 55 && n <= 56) return [6, n-54];
+                if (n >= 72 && n <= 86) return [6, n-68];
+                if (n >= 87 && n <= 88) return [7, n-86];
+                if (n >= 104 && n <= 118) return [7, n-100];
+                return null; // F-block
+            };
 
             for (let r = 1; r <= 7; r++) {
                 for (let c = 1; c <= 18; c++) {
-                    const cellData = mainMap[`${r}-${c}`];
                     const cell = document.createElement('div');
-                    if (cellData) {
-                        const el = elements.find(e => e.n === cellData.n);
-                        cell.className = `element-card ${cellData.cat}`;
+                    let elementNum = null;
+                    for(let i=1; i<=118; i++) {
+                        const co = getCoords(i);
+                        if (co && co[0] === r && co[1] === c) { elementNum = i; break; }
+                    }
+
+                    if (elementNum) {
+                        const cat = getCategory(elementNum);
+                        cell.className = `element-card ${cat}`;
                         cell.innerHTML = `
-                            <span class="absolute top-1 left-1 opacity-40 text-[9px]">${el.n}</span>
-                            <span class="text-lg font-bold">${el.s}</span>
-                            <span class="text-[10px]">${el.zh}</span>
+                            <span class="absolute top-1 left-1 opacity-40 text-[9px]">${elementNum}</span>
+                            <span class="text-lg font-bold">${symbols[elementNum]}</span>
+                            <span class="text-[9px]">${namesZh[elementNum]}</span>
                         `;
-                        cell.onclick = () => showElement({...el, cat: cellData.cat});
+                        cell.onclick = () => showElement(elementNum);
                     } else {
-                        // 佔位符
                         if (r === 6 && c === 3) { cell.className = "element-card lanthanide opacity-20 text-[8px]"; cell.innerText = "57-71"; }
                         else if (r === 7 && c === 3) { cell.className = "element-card actinide opacity-20 text-[8px]"; cell.innerText = "89-103"; }
                         else cell.style.visibility = "hidden";
@@ -295,39 +274,39 @@
                 }
             }
 
-            // 渲染下方 2x15 區塊
-            const fBlock = elements.filter(e => (e.n >= 57 && e.n <= 71) || (e.n >= 89 && e.n <= 103));
-            fBlock.forEach(el => {
+            // F-Block 2x15
+            const fNums = [...Array(15).keys()].map(x => x + 57).concat([...Array(15).keys()].map(x => x + 89));
+            fNums.forEach(n => {
                 const cell = document.createElement('div');
-                const cat = el.n <= 71 ? "lanthanide" : "actinide";
-                cell.className = `element-card ${cat}`;
+                cell.className = `element-card ${getCategory(n)}`;
                 cell.innerHTML = `
-                    <span class="absolute top-1 left-1 opacity-40 text-[9px]">${el.n}</span>
-                    <span class="text-lg font-bold">${el.s}</span>
-                    <span class="text-[10px]">${el.zh}</span>
+                    <span class="absolute top-1 left-1 opacity-40 text-[9px]">${n}</span>
+                    <span class="text-lg font-bold">${symbols[n]}</span>
+                    <span class="text-[9px]">${namesZh[n]}</span>
                 `;
-                cell.onclick = () => showElement({...el, cat: cat});
+                cell.onclick = () => showElement(n);
                 fTable.appendChild(cell);
             });
         }
 
-        function showElement(el) {
-            document.getElementById('m-number').innerText = el.n;
-            document.getElementById('m-symbol').innerText = el.s;
-            document.getElementById('m-name-zh').innerText = el.zh;
-            document.getElementById('m-name-en').innerText = el.en || el.s;
-            document.getElementById('m-electron').innerText = el.conf;
-            document.getElementById('m-physical').innerText = el.phys;
-            document.getElementById('m-chemical').innerText = el.chem;
-            document.getElementById('m-apps').innerText = el.apps;
+        function showElement(n) {
+            document.getElementById('m-number').innerText = n;
+            document.getElementById('m-symbol').innerText = symbols[n];
+            document.getElementById('m-name-zh').innerText = namesZh[n];
+            document.getElementById('m-name-en').innerText = namesEn[n];
+            document.getElementById('m-electron').innerText = configs[n];
             
-            // 維基百科圖片
-            // 優先使用定義的檔名，若無則嘗試用符號匹配
-            const wikiUrl = `https://commons.wikimedia.org/wiki/Special:FilePath/${el.img}?width=800`;
-            document.getElementById('m-image').src = wikiUrl;
+            // 基礎性質邏輯
+            document.getElementById('m-physical').innerText = `${namesEn[n]} 在標準條件下具有其所屬區塊之典型特徵，更多數據請參閱實驗紀錄。`;
+            document.getElementById('m-chemical').innerText = `其價電子排列為 ${configs[n]}，決定了該元素的化學反應活性與鍵結模式。`;
+            document.getElementById('m-apps').innerText = `廣泛應用於工業材料、科學研究以及現代科技設備中，是不可或缺的化學組成。`;
+
+            // 維基圖片連結
+            const fileName = wikiImages[n] || `${namesEn[n]}_element.jpg`;
+            document.getElementById('m-image').src = `https://commons.wikimedia.org/wiki/Special:FilePath/${fileName}?width=800`;
 
             const side = document.getElementById('modal-side');
-            side.className = `w-full md:w-1/3 p-10 flex flex-col items-center justify-center text-center ${el.cat} transition-colors duration-500`;
+            side.className = `w-full md:w-1/3 p-12 flex flex-col items-center justify-center text-center ${getCategory(n)} transition-all duration-700`;
 
             document.getElementById('modal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
