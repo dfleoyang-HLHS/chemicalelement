@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>互動式化學元素週期表 - 完整版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+
+        .periodic-container {
+            padding: 20px;
+            min-width: 1200px;
+        }
+
+        .periodic-grid {
+            display: grid;
+            grid-template-columns: repeat(18, minmax(0, 1fr));
+            gap: 4px;
+        }
+
+        /* 底部 F-區 容器：15 欄位 */
+        .f-block-grid {
+            display: grid;
+            grid-template-columns: repeat(15, minmax(0, 1fr));
+            gap: 4px;
+        }
+
+        .element-card {
+            aspect-ratio: 1 / 1;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.7rem;
+        }
+
+        .element-card:hover {
+            transform: scale(1.2);
+            z-index: 50;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+            border-color: white;
+        }
+
+        /* 元素分類配色 */
+        .nonmetal { background-color: #166534; }
+        .noble-gas { background-color: #6b21a8; }
+        .alkali-metal { background-color: #991b1b; }
+        .alkaline-earth { background-color: #9a3412; }
+        .metalloid { background-color: #155e75; }
+        .halogen { background-color: #854d0e; }
+        .post-transition { background-color: #065f46; }
+        .transition-metal { background-color: #1e40af; }
+        .lanthanide { background-color: #831843; }
+        .actinide { background-color: #9f1239; }
+
+        .modal-backdrop {
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #334155;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-6">
+
+    <header class="text-center mb-8">
+        <h1 class="text-3xl font-bold mb-2">化學元素週期表</h1>
+        <p class="text-slate-400">點擊元素查看詳細電子組態、物理及化學性質</p>
+    </header>
+
+    <!-- 週期表主體 -->
+    <div class="overflow-x-auto">
+        <div class="periodic-container max-w-7xl mx-auto">
+            <!-- 主表 (1-7 週期) -->
+            <div id="main-table" class="periodic-grid mb-10"></div>
+            
+            <!-- 下方獨立表 (鑭系與錒系) -->
+            <div class="periodic-grid">
+                <!-- 前 3 欄留空，讓底部表對齊主表的過渡金屬區 -->
+                <div class="col-span-3 flex flex-col justify-center items-end pr-4 opacity-40 text-[10px] tracking-widest font-bold">
+                    <div class="h-10 flex items-center mb-1">鑭系 LANTHANIDES</div>
+                    <div class="h-10 flex items-center">錒系 ACTINIDES</div>
+                </div>
+                <!-- 15 欄位的 F-區 -->
+                <div id="f-block-container" class="col-span-15 f-block-grid">
+                    <!-- JavaScript 將在此生成兩列元素 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 彈窗 Modal -->
+    <div id="modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="modal-backdrop absolute inset-0" onclick="closeModal()"></div>
+        <div class="bg-slate-800 w-full max-w-4xl rounded-2xl shadow-2xl relative overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
+            
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-white/50 hover:text-white z-20 bg-black/20 p-2 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <!-- 側邊：元素圖示 -->
+            <div id="modal-side" class="w-full md:w-1/3 p-10 flex flex-col items-center justify-center text-center transition-colors duration-500">
+                <span id="m-number" class="text-3xl font-bold opacity-30 mb-2"></span>
+                <span id="m-symbol" class="text-8xl font-bold mb-4 drop-shadow-lg"></span>
+                <h2 id="m-name-zh" class="text-5xl font-bold mb-2"></h2>
+                <p id="m-name-en" class="text-xl opacity-70 uppercase tracking-tighter"></p>
+            </div>
+
+            <!-- 內容：詳細性質 -->
+            <div class="w-full md:w-2/3 p-8 bg-slate-900 overflow-y-auto custom-scrollbar">
+                <div class="space-y-8">
+                    <!-- 示意照片 -->
+                    <div class="rounded-2xl overflow-hidden h-56 bg-slate-800 border border-slate-700 relative group">
+                        <img id="m-image" src="" alt="元素照片" class="object-cover w-full h-full transition-transform duration-700 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-6">
+                        <section>
+                            <h3 class="text-indigo-400 text-sm font-bold uppercase tracking-widest mb-3 flex items-center">
+                                <span class="w-8 h-[1px] bg-indigo-400 mr-2"></span> 電子組態
+                            </h3>
+                            <p id="m-electron" class="text-2xl font-mono text-slate-200"></p>
+                        </section>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <section class="bg-slate-800/50 p-4 rounded-xl border border-white/5">
+                                <h3 class="text-emerald-400 text-xs font-bold uppercase mb-2">物理性質</h3>
+                                <p id="m-physical" class="text-sm text-slate-300 leading-relaxed"></p>
+                            </section>
+                            <section class="bg-slate-800/50 p-4 rounded-xl border border-white/5">
+                                <h3 class="text-rose-400 text-xs font-bold uppercase mb-2">化學性質</h3>
+                                <p id="m-chemical" class="text-sm text-slate-300 leading-relaxed"></p>
+                            </section>
+                        </div>
+
+                        <section>
+                            <h3 class="text-amber-400 text-sm font-bold uppercase tracking-widest mb-3 flex items-center">
+                                <span class="w-8 h-[1px] bg-amber-400 mr-2"></span> 應用範圍
+                            </h3>
+                            <p id="m-apps" class="text-slate-300 leading-relaxed bg-slate-800/30 p-4 rounded-xl italic"></p>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 完整的元素數據 (1-118)
+        const rawElements = [
+            {n:1, s:"H", zh:"氫", en:"Hydrogen", cat:"nonmetal", r:1, c:1},
+            {n:2, s:"He", zh:"氦", en:"Helium", cat:"noble-gas", r:1, c:18},
+            {n:3, s:"Li", zh:"鋰", en:"Lithium", cat:"alkali-metal", r:2, c:1},
+            {n:4, s:"Be", zh:"鈹", en:"Beryllium", cat:"alkaline-earth", r:2, c:2},
+            {n:5, s:"B", zh:"硼", en:"Boron", cat:"metalloid", r:2, c:13},
+            {n:6, s:"C", zh:"碳", en:"Carbon", cat:"nonmetal", r:2, c:14},
+            {n:7, s:"N", zh:"氮", en:"Nitrogen", cat:"nonmetal", r:2, c:15},
+            {n:8, s:"O", zh:"氧", en:"Oxygen", cat:"nonmetal", r:2, c:16},
+            {n:9, s:"F", zh:"氟", en:"Fluorine", cat:"halogen", r:2, c:17},
+            {n:10, s:"Ne", zh:"氖", en:"Neon", cat:"noble-gas", r:2, c:18},
+            {n:11, s:"Na", zh:"鈉", en:"Sodium", cat:"alkali-metal", r:3, c:1},
+            {n:12, s:"Mg", zh:"鎂", en:"Magnesium", cat:"alkaline-earth", r:3, c:2},
+            {n:13, s:"Al", zh:"鋁", en:"Aluminum", cat:"post-transition", r:3, c:13},
+            {n:14, s:"Si", zh:"矽", en:"Silicon", cat:"metalloid", r:3, c:14},
+            {n:15, s:"P", zh:"磷", en:"Phosphorus", cat:"nonmetal", r:3, c:15},
+            {n:16, s:"S", zh:"硫", en:"Sulfur", cat:"nonmetal", r:3, c:16},
+            {n:17, s:"Cl", zh:"氯", en:"Chlorine", cat:"halogen", r:3, c:17},
+            {n:18, s:"Ar", zh:"氬", en:"Argon", cat:"noble-gas", r:3, c:18},
+            {n:19, s:"K", zh:"鉀", en:"Potassium", cat:"alkali-metal", r:4, c:1},
+            {n:20, s:"Ca", zh:"鈣", en:"Calcium", cat:"alkaline-earth", r:4, c:2},
+            {n:21, s:"Sc", zh:"鈧", en:"Scandium", cat:"transition-metal", r:4, c:3},
+            {n:22, s:"Ti", zh:"鈦", en:"Titanium", cat:"transition-metal", r:4, c:4},
+            {n:23, s:"V", zh:"釩", en:"Vanadium", cat:"transition-metal", r:4, c:5},
+            {n:24, s:"Cr", zh:"鉻", en:"Chromium", cat:"transition-metal", r:4, c:6},
+            {n:25, s:"Mn", zh:"錳", en:"Manganese", cat:"transition-metal", r:4, c:7},
+            {n:26, s:"Fe", zh:"鐵", en:"Iron", cat:"transition-metal", r:4, c:8},
+            {n:27, s:"Co", zh:"鈷", en:"Cobalt", cat:"transition-metal", r:4, c:9},
+            {n:28, s:"Ni", zh:"鎳", en:"Nickel", cat:"transition-metal", r:4, c:10},
+            {n:29, s:"Cu", zh:"銅", en:"Copper", cat:"transition-metal", r:4, c:11},
+            {n:30, s:"Zn", zh:"鋅", en:"Zinc", cat:"transition-metal", r:4, c:12},
+            {n:31, s:"Ga", zh:"鎵", en:"Gallium", cat:"post-transition", r:4, c:13},
+            {n:32, s:"Ge", zh:"鍺", en:"Germanium", cat:"metalloid", r:4, c:14},
+            {n:33, s:"As", zh:"砷", en:"Arsenic", cat:"metalloid", r:4, c:15},
+            {n:34, s:"Se", zh:"硒", en:"Selenium", cat:"nonmetal", r:4, c:16},
+            {n:35, s:"Br", zh:"溴", en:"Bromine", cat:"halogen", r:4, c:17},
+            {n:36, s:"Kr", zh:"氪", en:"Krypton", cat:"noble-gas", r:4, c:18},
+            {n:37, s:"Rb", zh:"銣", en:"Rubidium", cat:"alkali-metal", r:5, c:1},
+            {n:38, s:"Sr", zh:"鍶", en:"Strontium", cat:"alkaline-earth", r:5, c:2},
+            {n:39, s:"Y", zh:"釔", en:"Yttrium", cat:"transition-metal", r:5, c:3},
+            {n:40, s:"Zr", zh:"鋯", en:"Zirconium", cat:"transition-metal", r:5, c:4},
+            {n:41, s:"Nb", zh:"鈮", en:"Niobium", cat:"transition-metal", r:5, c:5},
+            {n:42, s:"Mo", zh:"鉬", en:"Molybdenum", cat:"transition-metal", r:5, c:6},
+            {n:43, s:"Tc", zh:"鎝", en:"Technetium", cat:"transition-metal", r:5, c:7},
+            {n:44, s:"Ru", zh:"釕", en:"Ruthenium", cat:"transition-metal", r:5, c:8},
+            {n:45, s:"Rh", zh:"銠", en:"Rhodium", cat:"transition-metal", r:5, c:9},
+            {n:46, s:"Pd", zh:"鈀", en:"Palladium", cat:"transition-metal", r:5, c:10},
+            {n:47, s:"Ag", zh:"銀", en:"Silver", cat:"transition-metal", r:5, c:11},
+            {n:48, s:"Cd", zh:"鎘", en:"Cadmium", cat:"transition-metal", r:5, c:12},
+            {n:49, s:"In", zh:"銦", en:"Indium", cat:"post-transition", r:5, c:13},
+            {n:50, s:"Sn", zh:"錫", en:"Tin", cat:"post-transition", r:5, c:14},
+            {n:51, s:"Sb", zh:"銻", en:"Antimony", cat:"metalloid", r:5, c:15},
+            {n:52, s:"Te", zh:"碲", en:"Tellurium", cat:"metalloid", r:5, c:16},
+            {n:53, s:"I", zh:"碘", en:"Iodine", cat:"halogen", r:5, c:17},
+            {n:54, s:"Xe", zh:"氙", en:"Xenon", cat:"noble-gas", r:5, c:18},
+            {n:55, s:"Cs", zh:"銫", en:"Cesium", cat:"alkali-metal", r:6, c:1},
+            {n:56, s:"Ba", zh:"鋇", en:"Barium", cat:"alkaline-earth", r:6, c:2},
+            // 57-71 移至 F-區
+            {n:72, s:"Hf", zh:"鉿", en:"Hafnium", cat:"transition-metal", r:6, c:4},
+            {n:73, s:"Ta", zh:"鉭", en:"Tantalum", cat:"transition-metal", r:6, c:5},
+            {n:74, s:"W", zh:"鎢", en:"Tungsten", cat:"transition-metal", r:6, c:6},
+            {n:75, s:"Re", zh:"錸", en:"Rhenium", cat:"transition-metal", r:6, c:7},
+            {n:76, s:"Os", zh:"鋨", en:"Osmium", cat:"transition-metal", r:6, c:8},
+            {n:77, s:"Ir", zh:"銥", en:"Iridium", cat:"transition-metal", r:6, c:9},
+            {n:78, s:"Pt", zh:"鉑", en:"Platinum", cat:"transition-metal", r:6, c:10},
+            {n:79, s:"Au", zh:"金", en:"Gold", cat:"transition-metal", r:6, c:11},
+            {n:80, s:"Hg", zh:"汞", en:"Mercury", cat:"transition-metal", r:6, c:12},
+            {n:81, s:"Tl", zh:"鉈", en:"Thallium", cat:"post-transition", r:6, c:13},
+            {n:82, s:"Pb", zh:"鉛", en:"Lead", cat:"post-transition", r:6, c:14},
+            {n:83, s:"Bi", zh:"鉍", en:"Bismuth", cat:"post-transition", r:6, c:15},
+            {n:84, s:"Po", zh:"釙", en:"Polonium", cat:"post-transition", r:6, c:16},
+            {n:85, s:"At", zh:"砈", en:"Astatine", cat:"halogen", r:6, c:17},
+            {n:86, s:"Rn", zh:"氡", en:"Radon", cat:"noble-gas", r:6, c:18},
+            {n:87, s:"Fr", zh:"鍅", en:"Francium", cat:"alkali-metal", r:7, c:1},
+            {n:88, s:"Ra", zh:"鐳", en:"Radium", cat:"alkaline-earth", r:7, c:2},
+            // 89-103 移至 F-區
+            {n:104, s:"Rf", zh:"鑪", en:"Rutherfordium", cat:"transition-metal", r:7, c:4},
+            {n:105, s:"Db", zh:"𨧀", en:"Dubnium", cat:"transition-metal", r:7, c:5},
+            {n:106, s:"Sg", zh:"𨭎", en:"Seaborgium", cat:"transition-metal", r:7, c:6},
+            {n:107, s:"Bh", zh:"𨨏", en:"Bohrium", cat:"transition-metal", r:7, c:7},
+            {n:108, s:"Hs", zh:"𨭆", en:"Hassium", cat:"transition-metal", r:7, c:8},
+            {n:109, s:"Mt", zh:"䥑", en:"Meitnerium", cat:"transition-metal", r:7, c:9},
+            {n:110, s:"Ds", zh:"鐽", en:"Darmstadtium", cat:"transition-metal", r:7, c:10},
+            {n:111, s:"Rg", zh:"錀", en:"Roentgenium", cat:"transition-metal", r:7, c:11},
+            {n:112, s:"Cn", zh:"鎶", en:"Copernicium", cat:"transition-metal", r:7, c:12},
+            {n:113, s:"Nh", zh:"鉨", en:"Nihonium", cat:"post-transition", r:7, c:13},
+            {n:114, s:"Fl", zh:"鈇", en:"Flerovium", cat:"post-transition", r:7, c:14},
+            {n:115, s:"Mc", zh:"鏌", en:"Moscovium", cat:"post-transition", r:7, c:15},
+            {n:116, s:"Lv", zh:"鉝", en:"Livermorium", cat:"post-transition", r:7, c:16},
+            {n:117, s:"Ts", zh:"鿬", en:"Tennessine", cat:"halogen", r:7, c:17},
+            {n:118, s:"Og", zh:"鿫", en:"Oganesson", cat:"noble-gas", r:7, c:18}
+        ];
+
+        // 鑭系與錒系數據
+        const fBlockData = [
+            // 鑭系 (57-71)
+            {n:57, s:"La", zh:"鑭", en:"Lanthanum", cat:"lanthanide"},
+            {n:58, s:"Ce", zh:"鈰", en:"Cerium", cat:"lanthanide"},
+            {n:59, s:"Pr", zh:"鐠", en:"Praseodymium", cat:"lanthanide"},
+            {n:60, s:"Nd", zh:"釹", en:"Neodymium", cat:"lanthanide"},
+            {n:61, s:"Pm", zh:"鉕", en:"Promethium", cat:"lanthanide"},
+            {n:62, s:"Sm", zh:"釤", en:"Samarium", cat:"lanthanide"},
+            {n:63, s:"Eu", zh:"銪", en:"Europium", cat:"lanthanide"},
+            {n:64, s:"Gd", zh:"", en:"Gadolinium", cat:"lanthanide"},
+            {n:65, s:"Tb", zh:"鋱", en:"Terbium", cat:"lanthanide"},
+            {n:66, s:"Dy", zh:"鏑", en:"Dysprosium", cat:"lanthanide"},
+            {n:67, s:"Ho", zh:"鈥", en:"Holmium", cat:"lanthanide"},
+            {n:68, s:"Er", zh:"鉺", en:"Erbium", cat:"lanthanide"},
+            {n:69, s:"Tm", zh:"銩", en:"Thulium", cat:"lanthanide"},
+            {n:70, s:"Yb", zh:"鐿", en:"Ytterbium", cat:"lanthanide"},
+            {n:71, s:"Lu", zh:"鑥", en:"Lutetium", cat:"lanthanide"},
+            // 錒系 (89-103)
+            {n:89, s:"Ac", zh:"錒", en:"Actinium", cat:"actinide"},
+            {n:90, s:"Th", zh:"釷", en:"Thorium", cat:"actinide"},
+            {n:91, s:"Pa", zh:"鏷", en:"Protactinium", cat:"actinide"},
+            {n:92, s:"U", zh:"鈾", en:"Uranium", cat:"actinide"},
+            {n:93, s:"Np", zh:"錼", en:"Neptunium", cat:"actinide"},
+            {n:94, s:"Pu", zh:"鈽", en:"Plutonium", cat:"actinide"},
+            {n:95, s:"Am", zh:"鋂", en:"Americium", cat:"actinide"},
+            {n:96, s:"Cm", zh:"鋦", en:"Curium", cat:"actinide"},
+            {n:97, s:"Bk", zh:"鉳", en:"Berkelium", cat:"actinide"},
+            {n:98, s:"Cf", zh:"鉲", en:"Californium", cat:"actinide"},
+            {n:99, s:"Es", zh:"鑀", en:"Einsteinium", cat:"actinide"},
+            {n:100, s:"Fm", zh:"鐨", en:"Fermium", cat:"actinide"},
+            {n:101, s:"Md", zh:"鍆", en:"Mendelevium", cat:"actinide"},
+            {n:102, s:"No", zh:"鍩", en:"Nobelium", cat:"actinide"},
+            {n:103, s:"Lr", zh:"鐒", en:"Lawrencium", cat:"actinide"}
+        ];
+
+        // 獲取詳細性質模板
+        function getDetail(el) {
+            const specificData = {
+                1: { config: "1s¹", phys: "常溫下為無色無味氣體。", chem: "極易燃，與氧氣反應生成水。", apps: "火箭燃料、氫能發電、合成氨。", img: "https://images.unsplash.com/photo-1532187875605-1ef6c237ddc4?auto=format&fit=crop&w=600" },
+                6: { config: "[He] 2s² 2p²", phys: "固體，具有石墨與鑽石等同素異形體。", chem: "常溫下非常穩定，高溫下可燃。", apps: "鋼鐵冶煉、鉛筆、珠寶、碳纖維。", img: "https://images.unsplash.com/photo-1517420838121-6efc2e399c0d?auto=format&fit=crop&w=600" },
+                26: { config: "[Ar] 3d⁶ 4s²", phys: "銀灰色金屬，具有磁性。", chem: "在潮濕空氣中容易生鏽氧化。", apps: "建築材料、交通工具、血紅蛋白。", img: "https://images.unsplash.com/photo-1533038590840-1cde6e668a91?auto=format&fit=crop&w=600" },
+                79: { config: "[Xe] 4f¹⁴ 5d¹⁰ 6s¹", phys: "金黃色金屬，極佳的延展性與導電性。", chem: "化學性質極不活潑，不溶於強酸。", apps: "珠寶首飾、電子接點、貨幣。", img: "https://images.unsplash.com/photo-1589110477658-d87255757645?auto=format&fit=crop&w=600" }
+            };
+
+            return specificData[el.n] || {
+                config: "軌域組態待查",
+                phys: `${el.zh}在此溫度與壓力下展現其屬性 (${el.cat}) 的標準物理特徵。`,
+                chem: `該元素具備特定的反應活性，詳見化學反應速率常數手冊。`,
+                apps: `廣泛運用於工業生產、科研實驗或特定高科技裝置中。`,
+                img: `https://placehold.co/600x400/1e293b/white?text=${el.s}+${el.zh}`
+            };
+        }
+
+        function createCell(el) {
+            const cell = document.createElement('div');
+            cell.className = `element-card ${el.cat}`;
+            cell.innerHTML = `
+                <span class="absolute top-1 left-1 opacity-50 scale-75">${el.n}</span>
+                <span class="text-base font-bold">${el.s}</span>
+                <span class="text-[0.6rem]">${el.zh}</span>
+            `;
+            cell.onclick = () => showElement(el);
+            return cell;
+        }
+
+        function initTable() {
+            const mainTable = document.getElementById('main-table');
+            const fBlockContainer = document.getElementById('f-block-container');
+            
+            const mainMap = {};
+            rawElements.forEach(e => { mainMap[`${e.r}-${e.c}`] = e; });
+
+            // 1. 渲染主表 (1-7 週期)
+            for (let r = 1; r <= 7; r++) {
+                for (let c = 1; c <= 18; c++) {
+                    const el = mainMap[`${r}-${c}`];
+                    if (el) {
+                        mainTable.appendChild(createCell(el));
+                    } else {
+                        const spacer = document.createElement('div');
+                        // 處理 57-71 和 89-103 的佔位提示
+                        if (r === 6 && c === 3) {
+                            spacer.className = "element-card lanthanide opacity-30 text-[9px]";
+                            spacer.innerText = "57-71";
+                        } else if (r === 7 && c === 3) {
+                            spacer.className = "element-card actinide opacity-30 text-[9px]";
+                            spacer.innerText = "89-103";
+                        } else {
+                            spacer.style.visibility = 'hidden';
+                        }
+                        mainTable.appendChild(spacer);
+                    }
+                }
+            }
+
+            // 2. 渲染底部 F-區 (由左至右，兩列)
+            fBlockData.forEach(el => {
+                fBlockContainer.appendChild(createCell(el));
+            });
+        }
+
+        function showElement(el) {
+            const detail = getDetail(el);
+            document.getElementById('m-number').innerText = el.n;
+            document.getElementById('m-symbol').innerText = el.s;
+            document.getElementById('m-name-zh').innerText = el.zh;
+            document.getElementById('m-name-en').innerText = el.en;
+            document.getElementById('m-electron').innerText = detail.config;
+            document.getElementById('m-physical').innerText = detail.phys;
+            document.getElementById('m-chemical').innerText = detail.chem;
+            document.getElementById('m-apps').innerText = detail.apps;
+            document.getElementById('m-image').src = detail.img;
+            
+            const side = document.getElementById('modal-side');
+            side.className = `w-full md:w-1/3 p-10 flex flex-col items-center justify-center text-center ${el.cat} transition-colors duration-500`;
+
+            document.getElementById('modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        window.onload = initTable;
+    </script>
+</body>
+</html>
